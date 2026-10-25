@@ -43,6 +43,11 @@ internal static class Inventory
             var files = g["files"]!.AsArray();
             for (var i = 0; i < files.Count; i++) if (Same(files[i], from)) files[i] = to;
         }
+        foreach (var v in (artifacts["versions"] as JsonArray ?? []).OfType<JsonObject>())
+        {
+            if (Same(v["newest"], from)) v["newest"] = to;
+            foreach (var f in v["files"]!.AsArray().OfType<JsonObject>().Where(f => Same(f["path"], from))) f["path"] = to;
+        }
         foreach (var s in (artifacts["summaries"] as JsonArray ?? []).OfType<JsonObject>().Where(s => Same(s["path"], from))) s["path"] = to;
         foreach (var a in (artifacts["actions"] as JsonArray ?? []).OfType<JsonObject>().Where(a => Same(a["source"], from))) a["source"] = to;
     }
@@ -145,7 +150,7 @@ public sealed partial class PlanOrganizationTool : IAgentTool
 
     public ToolSpec Spec { get; } = new(
         "files.plan_organization", 1,
-        "Propose how to organize the top level of the folder into subfolders (by file type, or by topic using document contents), move extra duplicate copies into a Duplicates folder, and optionally suggest clearer names for unclear document names. Changes nothing yet.",
+        "Propose how to organize the top level of the folder into subfolders (by file type, or by topic using document contents), move extra duplicate copies into a Duplicates folder (and older versions into Older versions, after files.compare_versions), and optionally suggest clearer names for unclear document names. Changes nothing yet.",
         [
             new ToolArg("strategy", "string", "by_type groups by kind of file; by_topic asks the model to group documents by subject", "by_type", ["by_type", "by_topic"]),
             new ToolArg("rename_unclear", "boolean", "Suggest clearer names for documents named like scan001 or document (2)", false),
@@ -164,7 +169,10 @@ public sealed partial class PlanOrganizationTool : IAgentTool
         [".exe"] = "Installers", [".msi"] = "Installers", [".dmg"] = "Installers", [".pkg"] = "Installers",
         [".mp3"] = "Audio", [".wav"] = "Audio", [".m4a"] = "Audio", [".flac"] = "Audio",
         [".mp4"] = "Video", [".mov"] = "Video", [".mkv"] = "Video", [".avi"] = "Video",
-        [".json"] = "Data", [".xml"] = "Data", [".log"] = "Data",
+        [".json"] = "Data", [".jsonl"] = "Data", [".xml"] = "Data", [".log"] = "Data", [".yaml"] = "Data", [".yml"] = "Data",
+        [".html"] = "Web pages", [".htm"] = "Web pages",
+        [".py"] = "Code", [".ipynb"] = "Code", [".js"] = "Code", [".ts"] = "Code", [".java"] = "Code", [".c"] = "Code", [".cpp"] = "Code", [".cs"] = "Code", [".sh"] = "Code", [".ps1"] = "Code",
+        [".tmp"] = "Temporary files",
     };
 
     [GeneratedRegex(@"^(scan|img|image|doc|document|download|untitled|file|new|copy|dsc|screenshot|unnamed)?[\s_\-]*\(?\d*\)?[\s_\-]*\d*$", RegexOptions.IgnoreCase)]
@@ -172,7 +180,7 @@ public sealed partial class PlanOrganizationTool : IAgentTool
 
     // Camera/phone/app-generated names: "WhatsApp Image 2025-01-02 at 10.11.12", "ChatGPT Image Mar 3, 2026, 09_41_10 PM",
     // "Screenshot 2026-05-01 101112", "IMG_20250101_123456", "PXL_…", or a bare GUID.
-    [GeneratedRegex(@"^((whatsapp|chatgpt|gemini) image|screenshot|screen shot|img|pxl|dsc|photo|image)([\s_\-.,:]|\d|\bat\b|\b[ap]m\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\(\d+\))*$|^[0-9a-f]{8}(-?[0-9a-f]{4}){3}-?[0-9a-f]{12}$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^((whatsapp|chatgpt|gemini) image|screenshot|screen shot|img|pxl|dsc|photo|image)([\s_\-.,:]|\d|\bat\b|\b[ap]m\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\(\d+\))*$|^(chatgpt|gemini|copilot|dall[\s\-]?e|midjourney)\b.*\d{4}|^[0-9a-f]{8}(-?[0-9a-f]{4}){3}-?[0-9a-f]{12}$", RegexOptions.IgnoreCase)]
     private static partial Regex GeneratedStem();
 
     public const int MaxImagesLookedAt = 6;
@@ -199,10 +207,18 @@ public sealed partial class PlanOrganizationTool : IAgentTool
             foreach (var f in g["files"]!.AsArray().Select(x => x!.GetValue<string>()).Where(f => !string.Equals(f, keep, StringComparison.OrdinalIgnoreCase)))
                 duplicateOf[f] = keep;
         }
+        // Older versions (when versions were compared): set aside next to the newest, which is organized normally.
+        var olderThan = new Dictionary<string, (string Newest, JsonNode Entry)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var v in ctx.ArtifactArray("versions").OfType<JsonNode>())
+        {
+            var newest = v["newest"]!.GetValue<string>();
+            foreach (var f in v["files"]!.AsArray().OfType<JsonNode>().Where(f => !string.Equals(f["path"]!.GetValue<string>(), newest, StringComparison.OrdinalIgnoreCase)))
+                if (!duplicateOf.ContainsKey(f["path"]!.GetValue<string>())) olderThan[f["path"]!.GetValue<string>()] = (newest, f);
+        }
 
         // 2. Model suggestions (topic folders and/or clearer names) for readable documents only.
         var suggestions = new Dictionary<string, (string? Folder, string? NewName)>(StringComparer.OrdinalIgnoreCase);
-        var candidates = top.Where(n => DocumentText.IsSupported(Inventory.Ext(n)) && !duplicateOf.ContainsKey(Inventory.Path(n)))
+        var candidates = top.Where(n => DocumentText.IsSupported(Inventory.Ext(n)) && !duplicateOf.ContainsKey(Inventory.Path(n)) && !olderThan.ContainsKey(Inventory.Path(n)))
             .Where(n => strategy == "by_topic" || renameUnclear && IsUnclearName(n["name"]!.GetValue<string>()))
             .ToList();
         // Looking at an image costs a vision-model call, so only a few are looked at (unclear names first);
@@ -270,6 +286,14 @@ public sealed partial class PlanOrganizationTool : IAgentTool
                 folder = DuplicatesFolder;
                 reason = $"Identical to “{keep}” (same SHA-256); extra copy set aside, not deleted";
             }
+            else if (olderThan.TryGetValue(path, out var older))
+            {
+                folder = CompareVersionsTool.OlderVersionsFolder;
+                var e = older.Entry;
+                reason = $"Older version of “{Path.GetFileName(older.Newest)}” (newest, modified later)" +
+                         (e["same_as_newest"]!.GetValue<bool>() ? "; identical content" :
+                          e["added"] is { } add ? $"; the newest has {add} new and {e["removed"]} removed line(s)" : "") + "; set aside, not deleted";
+            }
             else
             {
                 suggestions.TryGetValue(path, out var s);
@@ -301,6 +325,7 @@ public sealed partial class PlanOrganizationTool : IAgentTool
         {
             ["strategy"] = strategy, ["moves"] = moves.Count, ["folders"] = folders.Count, ["renames"] = renames,
             ["duplicates"] = moves.Count(m => m.Target.StartsWith(DuplicatesFolder + "\\", StringComparison.OrdinalIgnoreCase)),
+            ["older_versions"] = moves.Count(m => m.Target.StartsWith(CompareVersionsTool.OlderVersionsFolder + "\\", StringComparison.OrdinalIgnoreCase)),
             ["collisions_resolved"] = moves.Count(m => m.Note is not null), ["model_used"] = modelUsed,
         };
         return ToolOutcome.Success(

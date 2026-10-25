@@ -389,6 +389,28 @@ public sealed class CreateReportTool : IAgentTool
             foreach (var g in dups) sb.Append("- ").Append(Markdown.EscapeText(string.Join(" = ", g!["files"]!.AsArray().Select(f => f!.GetValue<string>())))).Append('\n');
             sb.Append('\n');
         }
+        if (a["versions"] is JsonArray vers && vers.Count > 0)
+        {
+            sb.Append("## Versions of the same file\n");
+            foreach (var v in vers)
+            {
+                sb.Append("### ").Append(Markdown.EscapeText(v!["newest"]!.GetValue<string>())).Append(" (newest)\n");
+                foreach (var f in v["files"]!.AsArray().Skip(1))
+                {
+                    sb.Append("- ").Append(Markdown.EscapeText(f!["path"]!.GetValue<string>())).Append(": ");
+                    if (f["same_as_newest"]!.GetValue<bool>()) sb.Append("identical to the newest");
+                    else if (f["added"] is { } added)
+                    {
+                        sb.Append($"the newest has {added} new and {f["removed"]} removed line(s)");
+                        var ex = f["added_examples"]!.AsArray().Select(x => x!.GetValue<string>()).FirstOrDefault();
+                        if (ex is not null) sb.Append(" — new, e.g. “").Append(Markdown.EscapeText(ex)).Append('”');
+                    }
+                    else sb.Append("different content (not a readable text format)");
+                    sb.Append('\n');
+                }
+                sb.Append('\n');
+            }
+        }
         if (a["summaries"] is JsonArray sums && sums.Count > 0)
         {
             sb.Append("## Document summaries\n");
@@ -476,7 +498,7 @@ public static class ToolRegistry
     /// and even then stay hidden from the planner until the user enables web research and adds keys.</summary>
     public static IReadOnlyList<IAgentTool> Default(WebConfig? web = null) =>
     [
-        new ListFilesTool(), new FindDuplicatesTool(), new PlanOrganizationTool(), new ApplyOrganizationTool(),
+        new ListFilesTool(), new FindDuplicatesTool(), new CompareVersionsTool(), new PlanOrganizationTool(), new ApplyOrganizationTool(),
         new SummarizeDocsTool(), new ExtractActionsTool(), new CreateTasksTool(), new SearchNotesTool(), new CreateReportTool(),
         .. web is null ? Array.Empty<IAgentTool>() : [new WebSearchTool(web), new WebReadTool(web), new ResearchReportTool()],
     ];

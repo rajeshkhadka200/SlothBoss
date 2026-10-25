@@ -80,6 +80,15 @@ public static class PlanValidator
             notes.Add("Added files.find_duplicates because the goal mentions duplicates.");
         }
 
+        // The goal asks which copy is newest / what changed, but the plan never compares versions: add the (read-only) check.
+        if (goal is not null && System.Text.RegularExpressions.Regex.IsMatch(goal, @"\b(versions?|latest|newest|which (copy|one|file)|what changed|changes between|older copies|old copies)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            && !steps.Any(s => s.Tool == "files.compare_versions") && byId.TryGetValue("files.compare_versions", out var verTool))
+        {
+            var at = steps.FindIndex(s => s.Tool is "files.plan_organization" or "report.create");
+            steps.Insert(at < 0 ? steps.Count : at, new PlanStep(verTool.Spec.Id, "Find versions of the same file and what changed.", verTool.ValidateArgs([])));
+            notes.Add("Added files.compare_versions because the goal asks about versions.");
+        }
+
         // Dependency pass: every step's inputs are produced earlier. A producer that appears later in the
         // plan is moved up; a missing one is added with default options (recursively).
         var produced = new HashSet<string>(alreadyProduced ?? new HashSet<string>());
@@ -127,6 +136,16 @@ public static class PlanValidator
             steps.RemoveAt(dup);
             steps.Insert(org, d);
             notes.Add("Moved files.find_duplicates before files.plan_organization so duplicates are handled.");
+        }
+        // Likewise versions, so older versions can be set aside.
+        var ver = steps.FindIndex(s => s.Tool == "files.compare_versions");
+        org = steps.FindIndex(s => s.Tool == "files.plan_organization");
+        if (ver > org && org >= 0)
+        {
+            var v = steps[ver];
+            steps.RemoveAt(ver);
+            steps.Insert(org, v);
+            notes.Add("Moved files.compare_versions before files.plan_organization so older versions are handled.");
         }
 
         var report = steps.FindIndex(s => s.Tool is "report.create" or "research.report");
@@ -266,6 +285,7 @@ public sealed class RulesPlanner : IAgentPlanner
         var dupes = Has("duplicate", "dupe", "same file", "copies");
         if (organize || dupes) Add("files.list", "See what is in the folder.");
         if (dupes || organize) Add("files.find_duplicates", "Find identical files.");
+        if (Has("version", "latest", "newest", "which copy", "what changed")) Add("files.compare_versions", "Find versions of the same file and what changed.");
         if (organize)
         {
             Add("files.plan_organization", "Propose folders by file type.", new JsonObject { ["strategy"] = "by_type" });

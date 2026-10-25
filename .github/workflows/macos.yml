@@ -1,16 +1,8 @@
 name: macOS
 
+# The macOS client is not released yet (Windows now, Mac next), so this runs only on demand:
+# Actions -> macOS -> Run workflow.
 on:
-  push:
-    paths:
-      - "apps/macos/**"
-      - "contracts/**"
-      - ".github/workflows/macos.yml"
-  pull_request:
-    paths:
-      - "apps/macos/**"
-      - "contracts/**"
-      - ".github/workflows/macos.yml"
   workflow_dispatch:
 
 permissions:

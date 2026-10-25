@@ -74,14 +74,17 @@
           "items": {
             "type": "object",
             "properties": {
-              "tool": { "type": "string", "enum": ["files.list", "files.find_duplicates", "files.plan_organization", "files.apply_organization",
-                                                    "docs.summarize", "docs.extract_actions", "tasks.create", "notes.search", "report.create"] },
+              "tool": { "type": "string", "enum": ["files.list", "files.find_duplicates", "files.compare_versions", "files.plan_organization", "files.apply_organization",
+                                                    "docs.summarize", "docs.extract_actions", "tasks.create", "notes.search", "report.create",
+                                                    "web.search", "web.read", "research.report"] },
               "purpose": { "type": "string" },
               "strategy": { "type": "string", "enum": ["by_type", "by_topic"] },
               "rename_unclear": { "type": "boolean" },
               "selection": { "type": "string", "enum": ["important", "pdfs", "all"] },
               "max_documents": { "type": "integer" },
               "query": { "type": "string" },
+              "max_results": { "type": "integer" },
+              "max_pages": { "type": "integer" },
               "save_copy_in_folder": { "type": "boolean" }
             },
             "required": ["tool", "purpose"]
@@ -90,6 +93,28 @@
         "completion_criteria": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["understanding", "missing_information", "steps", "completion_criteria"]
+    },
+    "agent_research_report": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "claim": { "type": "string" },
+              "sources": { "type": "array", "items": { "type": "string" } },
+              "confidence": { "type": "string", "enum": ["verified", "likely", "uncertain"] }
+            },
+            "required": ["claim", "sources", "confidence"]
+          }
+        },
+        "recommendation": { "type": "string" },
+        "caveats": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "summary", "findings", "recommendation", "caveats"]
     },
     "agent_organize": {
       "type": "object",

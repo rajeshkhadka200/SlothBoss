@@ -19,6 +19,7 @@ leave your PC.
 | "Research the best open-source AI tools for a desktop assistant and recommend one." | Searches Google (SerpApi), reads the best pages (Browserbase), and Gemma writes a short report. Every claim links to a source and is labelled *confirmed in a page*, *search snippet only* or *uncertain*. Fake citations are removed. |
 | "Organize my Downloads folder and set duplicates aside." | Proposes folders, clearer names for files like `scan001.pdf` or `WhatsApp Image 2026-…jpeg` (from what's inside them), and a *Duplicates* folder — shows you every change, then does it after you approve. Never deletes or overwrites. One-click undo. |
 | "Summarize these files and list what I need to do." | Reads PDFs, Word documents, **PowerPoint slides (with speaker notes), Excel spreadsheets (every sheet, real dates)** and text — and **looks at photos and screenshots** with Gemma's vision to read the text in them. Summarizes everything and turns deadlines into tasks, each with the quote it came from. |
+| "Which copy of my paper is the latest, and what changed?" | Finds versions of the same file (`paper.docx`, `paper (3).docx`, `Emission_factors_corrected.xlsx`…), says which is newest, which copies are identical, and what changed — with example lines. Can set older versions aside in an *Older versions* folder. |
 | 🎤 Press **Speak** and say any of the above | ElevenLabs turns your voice into text. |
 
 ## Get started (Windows, ~15 minutes once)
@@ -58,7 +59,7 @@ Not used: Temporal (durability is handled by SlothBoss's own SQLite job journal)
 ## For developers
 
 ```powershell
-dotnet test  apps/windows/tests/SlothBoss.Core.Tests        # 227 tests (8 live ones run only when opted in)
+dotnet test  apps/windows/tests/SlothBoss.Core.Tests        # 242 tests (8 live ones run only when opted in)
 powershell -File scripts/test-windows.ps1 -LiveModel gemma4:e2b-it-qat
 powershell -File scripts/package-windows.ps1                # self-contained zip
 SlothBoss.exe --selftest-online report.txt                  # one real call to each partner service with saved keys

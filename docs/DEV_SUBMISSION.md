@@ -33,6 +33,10 @@ or press **Speak** and say it — and it does the boring part:
   piles are really made of: PDFs and Word files, but also **slide decks (including the speaker notes),
   spreadsheets (every sheet, with real dates), and photos and screenshots** — Gemma looks at the picture
   and reads the text in it.
+- **"Which copy of my paper is the latest, and what changed?"**
+  Everyone has `paper.docx`, `paper (1).docx` and `paper_final (3).docx`. SlothBoss finds versions of the
+  same file, tells you which is newest, which copies are byte-for-byte identical, and what lines the
+  newest added or removed — then offers to move the old ones into an *Older versions* folder.
 - **"Research the best open-source AI tools for a desktop assistant and recommend one."**
   It searches the web, reads the best pages, and writes a short report where every claim links to a source.
 
@@ -118,7 +122,7 @@ and your voice recording to ElevenLabs only when you press Speak. Your files nev
 - One reader for every file type: PDF and Word text, PowerPoint slides in presentation order with their
   notes, Excel sheets with dates shown as dates, and images described by Gemma's vision — all treated as
   untrusted data.
-- 227 automated tests cover the tricky parts: locked files, the app closing mid-job, invented citations,
+- 242 automated tests cover the tricky parts: locked files, the app closing mid-job, invented citations,
   malicious documents, missing keys, no internet, reordered slides, Excel date cells, models without vision.
 
 ## What's next

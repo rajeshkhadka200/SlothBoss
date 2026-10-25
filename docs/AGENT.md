@@ -43,6 +43,7 @@ The model can only name tools and options — **no tool accepts a file path, SQL
 |---|---|---|---|
 | `files.list` | read | inventory of the approved folder (≤ 3 levels, ≤ 500 files, skips hidden/system/links) | listed files exist |
 | `files.find_duplicates` | read | SHA-256 groups (only same-size files hashed; byte budget) | groups re-hashed |
+| `files.compare_versions` | read | groups versions of the same file by name (`(2)`, `- Copy`, `_final`, `_corrected`, `v3`… ignored), newest = most recently modified; identical copies by SHA-256; for readable formats, lines added/removed vs the newest with examples | compared files exist |
 | `files.plan_organization` | read | concrete proposal: type or model-suggested topic folders, Duplicates folder for extra copies, model-suggested names for unclear names; collisions pre-resolved | sources exist, targets free and unique |
 | `files.apply_organization` | **modify** | creates folders, moves files one at a time; never deletes or overwrites | each move: same SHA-256 at the new path, gone from the old |
 | `docs.summarize` | read + model | summaries from the files' actual content (PDF, DOCX, PPTX, XLSX, TXT, MD, CSV, images) | summaries refer to existing files |

@@ -74,7 +74,7 @@
           "items": {
             "type": "object",
             "properties": {
-              "tool": { "type": "string", "enum": ["files.list", "files.find_duplicates", "files.plan_organization", "files.apply_organization",
+              "tool": { "type": "string", "enum": ["files.list", "files.find_duplicates", "files.compare_versions", "files.plan_organization", "files.apply_organization",
                                                     "docs.summarize", "docs.extract_actions", "tasks.create", "notes.search", "report.create",
                                                     "web.search", "web.read", "research.report"] },
               "purpose": { "type": "string" },
