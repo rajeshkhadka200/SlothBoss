@@ -1,0 +1,36 @@
+{
+  "description": "Each case is a full backup document that must be rejected without modifying the workspace.",
+  "cases": [
+    { "name": "wrong format marker", "backup": { "format": "notion", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "pages": [], "tasks": [] } },
+    { "name": "future format version", "backup": { "format": "slothboss-backup", "formatVersion": 2, "schemaVersion": 1, "exportedAt": "", "pages": [], "tasks": [] } },
+    { "name": "future schema version", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 99, "exportedAt": "", "pages": [], "tasks": [] } },
+    { "name": "missing parent", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "tasks": [], "pages": [
+      { "id": "11111111-1111-4111-8111-111111111111", "parentId": "22222222-2222-4222-8222-222222222222", "title": "Orphan",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "parent cycle", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "tasks": [], "pages": [
+      { "id": "11111111-1111-4111-8111-111111111111", "parentId": "22222222-2222-4222-8222-222222222222", "title": "A",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" },
+      { "id": "22222222-2222-4222-8222-222222222222", "parentId": "11111111-1111-4111-8111-111111111111", "title": "B",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "duplicate page id", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "tasks": [], "pages": [
+      { "id": "11111111-1111-4111-8111-111111111111", "parentId": null, "title": "A",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" },
+      { "id": "11111111-1111-4111-8111-111111111111", "parentId": null, "title": "B",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "unknown block type", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "tasks": [], "pages": [
+      { "id": "11111111-1111-4111-8111-111111111111", "parentId": null, "title": "A",
+        "content": {"version":1,"blocks":[{"type":"embed","spans":[]}]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "task invalid status", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "pages": [], "tasks": [
+      { "id": "33333333-3333-4333-8333-333333333333", "title": "T", "status": "blocked", "priority": "low",
+        "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "task links missing page", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "pages": [], "tasks": [
+      { "id": "33333333-3333-4333-8333-333333333333", "title": "T", "status": "todo", "priority": "low", "pageId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "task invalid due date", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "pages": [], "tasks": [
+      { "id": "33333333-3333-4333-8333-333333333333", "title": "T", "status": "todo", "priority": "low", "dueDate": "2026-02-30",
+        "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } },
+    { "name": "invalid id", "backup": { "format": "slothboss-backup", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "", "tasks": [], "pages": [
+      { "id": "../../etc/passwd", "parentId": null, "title": "A",
+        "content": {"version":1,"blocks":[]}, "createdAt": "2026-10-20T10:00:00.000Z", "updatedAt": "2026-10-20T10:00:00.000Z" } ] } }
+  ]
+}

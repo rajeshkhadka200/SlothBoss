@@ -1,0 +1,3 @@
+# The synced contract copies must stay byte-identical to /contracts (LF line endings).
+Sources/SlothBossCore/Resources/contracts/** text eol=lf
+*.sh text eol=lf

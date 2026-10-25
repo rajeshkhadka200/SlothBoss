@@ -1,0 +1,60 @@
+name: Windows
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write # lets a version tag publish the release
+
+jobs:
+  build-test-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Core tests (unit + shared contract fixtures)
+        run: dotnet test apps/windows/tests/SlothBoss.Core.Tests --logger "console;verbosity=minimal"
+
+      - name: Build WinUI 3 app
+        run: dotnet build apps/windows/src/SlothBoss.App -c Debug -p:Platform=x64 -r win-x64
+
+      # Hosted runners have a desktop session, but UI automation there is not guaranteed;
+      # a failure here is reported without failing the build. Run locally with scripts/test-windows.ps1.
+      - name: Editor self-test (live RichEditBox)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $exe = "apps/windows/src/SlothBoss.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-x64/SlothBoss.exe"
+          $report = "$env:RUNNER_TEMP/selftest.txt"
+          $p = Start-Process $exe -ArgumentList "--selftest-editor", "`"$PWD/contracts/fixtures`"", "`"$report`"" -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill(); throw "timed out" }
+          Get-Content $report
+          if (-not (Select-String -Path $report -Pattern "ALL PASSED" -Quiet)) { throw "editor self-test failed" }
+
+      - name: Package (self-contained, unsigned)
+        shell: pwsh
+        run: ./scripts/package-windows.ps1 -Arch x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SlothBoss-win-x64
+          path: artifacts/windows/*.zip
+
+      # Pushing a tag such as v0.4.0 publishes a GitHub Release with the zip attached.
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/windows/*.zip
+          body: |
+            **Windows 10/11 (64-bit).** Download `SlothBoss-…-win-x64.zip` below, unzip it, run `SlothBoss.exe`.
+            No installer and no .NET needed. Then install [Ollama](https://ollama.com/download) and run
+            `ollama pull gemma4:e2b-it-qat`. Full guide: [Install and run](https://github.com/${{ github.repository }}/blob/main/docs/INSTALL.md).
+            This build is not code-signed yet, so Windows may show "Windows protected your PC" → **More info → Run anyway**.

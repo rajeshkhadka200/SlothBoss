@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slothboss.dev/schemas/content.v1.json",
+  "title": "SlothBoss page content (pages.content_json), version 1",
+  "type": "object",
+  "required": ["version", "blocks"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } }
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "required": ["type", "spans"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["paragraph", "heading", "bulleted", "numbered", "todo", "quote", "code"]
+        },
+        "level": { "type": "integer", "minimum": 1, "maximum": 3, "description": "heading only" },
+        "checked": { "type": "boolean", "description": "todo only" },
+        "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } }
+      }
+    },
+    "span": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "description": "May contain \\n only inside a code block." },
+        "bold": { "type": "boolean" },
+        "italic": { "type": "boolean" },
+        "code": { "type": "boolean" },
+        "link": {
+          "type": "string",
+          "description": "http(s)/mailto URL, or slothboss://page/<page-id> for an internal page reference."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+
+# Swift / Xcode
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Build outputs
+artifacts/
+
+# Never commit personal workspaces or backups
+*.db
+*.db-wal
+*.db-shm
+*.slothboss-backup.json
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local tool settings
+.claude/
+

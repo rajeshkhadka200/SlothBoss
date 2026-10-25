@@ -1,0 +1,13 @@
+Research plan
+We compare local and hosted models using ollama run.
+Open questions
+How fast is Gemma?
+Does it handle 5*3 and snake_case?
+Install Ollama
+Pull a model
+Write the report
+Book the room
+Privacy is the default.
+ollama list
+ollama run gemma
+See the docs and Background.

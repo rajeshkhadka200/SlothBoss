@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="SlothBoss.App.Views.HistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="{StaticResource ContentMaxWidth}" Padding="40,28,40,48" Spacing="4">
+            <TextBlock Text="AI action history" Style="{StaticResource PageTitleTextStyle}" />
+            <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"
+                       Text="Every change the assistant proposed, and what happened to it. Nothing is applied without your approval. Undo only works while the affected page or task is unchanged since the action, so your later edits are never overwritten." />
+            <StackPanel x:Name="List" Spacing="6" />
+            <TextBlock x:Name="EmptyText" Text="The assistant hasn't proposed any changes yet." Foreground="{ThemeResource TextFillColorTertiaryBrush}" Visibility="Collapsed" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

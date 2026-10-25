@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slothboss.dev/schemas/action.v1.json",
+  "title": "SlothBoss AI action payloads (ai_actions.payload_json), version 1",
+  "description": "Actions are produced by the application from validated model output, never passed through from the model verbatim. The application resolves source ids (S1, S2...) to real page ids before building a payload.",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "create_task",
+      "required": ["type", "title", "priority"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "create_task" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "description": { "type": ["string", "null"], "maxLength": 2000 },
+        "priority": { "enum": ["low", "medium", "high", "urgent"] },
+        "due_date": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "page_id": { "type": ["string", "null"], "description": "Existing page the task is linked to." }
+      }
+    },
+    {
+      "type": "object",
+      "title": "create_page",
+      "required": ["type", "title", "content"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "create_page" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "parent_id": { "type": ["string", "null"] },
+        "content": { "$ref": "content.schema.json" }
+      }
+    },
+    {
+      "type": "object",
+      "title": "draft_page_content",
+      "description": "Appends blocks to the end of an existing page.",
+      "required": ["type", "page_id", "blocks"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "draft_page_content" },
+        "page_id": { "type": "string" },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "content.schema.json#/$defs/block" } }
+      }
+    },
+    {
+      "type": "object",
+      "title": "add_page_reference",
+      "description": "Appends a paragraph linking page_id to target_page_id.",
+      "required": ["type", "page_id", "target_page_id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "add_page_reference" },
+        "page_id": { "type": "string" },
+        "target_page_id": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "title": "update_task",
+      "description": "Only status, priority and due_date may be changed by AI actions.",
+      "required": ["type", "task_id", "changes"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "update_task" },
+        "task_id": { "type": "string" },
+        "changes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "status": { "enum": ["todo", "in_progress", "done"] },
+            "priority": { "enum": ["low", "medium", "high", "urgent"] },
+            "due_date": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+          }
+        }
+      }
+    }
+  ]
+}

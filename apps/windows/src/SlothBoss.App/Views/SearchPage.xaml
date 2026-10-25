@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="SlothBoss.App.Views.SearchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="40,28,40,0" MaxWidth="{StaticResource ContentMaxWidth}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Search" Style="{StaticResource PageTitleTextStyle}" />
+        <StackPanel Grid.Row="1" Spacing="6" Margin="0,0,0,12">
+            <TextBox x:Name="QueryBox" PlaceholderText="Search pages and tasks" TextChanged="OnQueryChanged" KeyDown="OnQueryKeyDown"
+                     AutomationProperties.Name="Search query" />
+            <TextBlock x:Name="StatusText" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       AutomationProperties.LiveSetting="Polite" />
+        </StackPanel>
+        <ListView x:Name="Results" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OnResultClick"
+                  Padding="0,0,0,40" AutomationProperties.Name="Search results" />
+    </Grid>
+</Page>

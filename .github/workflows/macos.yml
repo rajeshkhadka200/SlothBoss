@@ -1,0 +1,61 @@
+name: macOS
+
+on:
+  push:
+    paths:
+      - "apps/macos/**"
+      - "contracts/**"
+      - ".github/workflows/macos.yml"
+  pull_request:
+    paths:
+      - "apps/macos/**"
+      - "contracts/**"
+      - ".github/workflows/macos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Sync contracts
+        run: bash apps/macos/scripts/sync-contracts.sh
+
+      - name: Synced contracts must be committed
+        run: |
+          git diff --exit-code -- apps/macos/Sources/SlothBossCore/Resources/contracts
+          untracked="$(git status --porcelain -- apps/macos/Sources/SlothBossCore/Resources/contracts)"
+          if [ -n "$untracked" ]; then
+            echo "$untracked"
+            echo "::error::Run apps/macos/scripts/sync-contracts.sh and commit the result."
+            exit 1
+          fi
+
+      - name: Build
+        working-directory: apps/macos
+        run: swift build
+
+      - name: Test
+        working-directory: apps/macos
+        run: swift test
+
+      - name: Build app bundle
+        run: bash apps/macos/scripts/build-app.sh
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: SlothBoss-macOS
+          path: apps/macos/build/SlothBoss-macOS.zip
+          if-no-files-found: error

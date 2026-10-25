@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="SlothBoss.App.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="{StaticResource ContentMaxWidth}" Padding="40,28,40,48" Spacing="12">
+            <TextBlock Text="Settings" Style="{StaticResource PageTitleTextStyle}" />
+            <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,-8,0,4"
+                       Text="Set up once. Step 1 is required; steps 2 and 3 add web research and voice if you want them. Keys you paste here stay encrypted on this computer." />
+
+            <!-- Local AI -->
+            <TextBlock Text="1 · Local AI (required)" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Ellipse x:Name="AiDot" Width="10" Height="10" VerticalAlignment="Center" />
+                        <TextBlock x:Name="AiStatus" TextWrapping="Wrap" Style="{StaticResource BodyStrongTextBlockStyle}" AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+                    <TextBlock x:Name="AiDetail" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsTextSelectionEnabled="True" />
+                    <ComboBox x:Name="ModelBox" Header="Gemma model" MinWidth="320" SelectionChanged="OnModelChanged" />
+                    <TextBlock x:Name="IgnoredModels" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBox x:Name="EndpointBox" Header="Ollama endpoint (must be on this computer)" MinWidth="320" />
+                        <NumberBox x:Name="TimeoutBox" Header="Timeout (seconds)" Minimum="15" Maximum="1800" SmallChange="15" SpinButtonPlacementMode="Compact" MinWidth="150" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Save and re-check" Style="{StaticResource AccentButtonStyle}" Click="OnSaveAi" />
+                        <Button Content="Re-check" Click="OnRecheck" />
+                    </StackPanel>
+                    <Expander Header="Setup instructions" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" x:Name="SetupExpander">
+                        <StackPanel Spacing="8">
+                            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True">
+                                <Run Text="1. Install Ollama from https://ollama.com and start it (it runs a local server on port 11434)." /><LineBreak />
+                                <Run Text="2. In a terminal, download a Gemma model once. For example:" />
+                            </TextBlock>
+                            <TextBox IsReadOnly="True" FontFamily="Cascadia Mono" Text="ollama pull gemma4:e2b-it-qat" />
+                            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Text="That model is about 4.3 GB on disk and runs on 8 GB of RAM; larger Gemma variants give better answers but need more memory and are slower on a CPU. The download is the only step that needs the internet. SlothBoss never downloads models itself and never sends your notes to a cloud service." />
+                            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True">
+                                <Run Text="3. Press Re-check. Model terms: Gemma models are provided under Google's Gemma terms of use, which are separate from SlothBoss's MIT license." />
+                            </TextBlock>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </Border>
+
+            <!-- Web research (opt-in) -->
+            <TextBlock Text="2 · Web research (optional)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="12">
+                    <ToggleSwitch x:Name="WebToggle" Header="Allow SlothBoss to research on the internet" Toggled="OnWebToggled"
+                                  OffContent="Off — nothing is sent online" OnContent="On" />
+                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Lets SlothBoss look things up and write reports with sources. Research jobs send their search queries to SerpApi (Google results) and the addresses of result pages to Browserbase, which returns the page text. Your files, notes and tasks are never sent, and the AI still runs on this computer. Both services have free plans; paid plans are billed by them, not by SlothBoss." />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <HyperlinkButton Content="Get a free SerpApi key ↗" NavigateUri="https://serpapi.com/users/sign_up" Padding="0" />
+                        <HyperlinkButton Content="Get a free Browserbase key ↗" NavigateUri="https://www.browserbase.com/sign-up" Padding="0" />
+                    </StackPanel>
+                    <Grid ColumnSpacing="8" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <PasswordBox x:Name="SerpKeyBox" Header="SerpApi key (serpapi.com → Manage API key)" PlaceholderText="Paste a new key to save it" />
+                        <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Save" Click="OnSaveSerpKey" />
+                        <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Test" Click="OnTestSerp" ToolTipService.ToolTip="Checks the key with SerpApi's account endpoint (doesn't use a search)" />
+                        <TextBlock x:Name="SerpStatus" Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <PasswordBox x:Name="BbKeyBox" Grid.Row="2" Header="Browserbase key (browserbase.com → Settings → API key)" PlaceholderText="Paste a new key to save it" />
+                        <Button Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" Content="Save" Click="OnSaveBbKey" />
+                        <Button Grid.Row="2" Grid.Column="2" VerticalAlignment="Bottom" Content="Test" Click="OnTestBb" ToolTipService.ToolTip="Reads https://example.com through Browserbase (uses one page fetch)" />
+                        <TextBlock x:Name="BbStatus" Grid.Row="3" Grid.ColumnSpan="3" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               Text="Keys are encrypted for your Windows account (DPAPI) and kept outside your workspace and backups. If you prefer, set the environment variables SERPAPI_API_KEY and BROWSERBASE_API_KEY instead." />
+                </StackPanel>
+            </Border>
+
+            <!-- Voice (optional) -->
+            <TextBlock Text="3 · Voice (optional)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Press “Speak” on the Home screen and say what you want instead of typing. ElevenLabs turns your recording into text; the recording is sent to ElevenLabs only when you press Speak, and deleted from this computer right after." />
+                    <HyperlinkButton Content="Get a free ElevenLabs key ↗" NavigateUri="https://elevenlabs.io/app/settings/api-keys" Padding="0" />
+                    <Grid ColumnSpacing="8" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <PasswordBox x:Name="VoiceKeyBox" Header="ElevenLabs API key" PlaceholderText="Paste a new key to save it" />
+                        <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Save" Click="OnSaveVoiceKey" />
+                        <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Test" Click="OnTestVoice" ToolTipService.ToolTip="Speaks a test sentence with Windows' built-in voice and asks ElevenLabs to transcribe it" />
+                        <TextBlock x:Name="VoiceStatus" Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Expander Header="Advanced settings" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,16,0,0">
+            <StackPanel Spacing="12">
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Archived notes" Click="OnOpenArchive" />
+                <Button Content="Notes assistant history" Click="OnOpenHistory" />
+                <Button Content="Search notes (Ctrl+P)" Click="OnOpenSearch" />
+            </StackPanel>
+
+            <!-- Agent permissions -->
+            <TextBlock Text="Agent permissions" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="These rules are enforced by SlothBoss itself — the AI can't change them or approve its own actions. “Default” follows the job's mode (Assist asks before every change; Autopilot asks before file changes; Supervised asks once for the whole plan)." />
+                    <TextBlock Text="Folders agent jobs may use" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <StackPanel x:Name="FolderList" Spacing="4" />
+                    <TextBlock Text="Per-action rules" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                    <StackPanel x:Name="PolicyList" Spacing="6" />
+                    <ToggleSwitch x:Name="AutoResumeToggle" Header="Resume interrupted jobs automatically when SlothBoss starts"
+                                  OffContent="Off — interrupted jobs wait for you" OnContent="On" Toggled="OnAutoResumeToggled" />
+                </StackPanel>
+            </Border>
+
+            <!-- Workspace -->
+            <TextBlock Text="Workspace and backups" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Location" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Name="WorkspacePath" TextWrapping="Wrap" IsTextSelectionEnabled="True" FontFamily="Cascadia Mono" FontSize="12" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Show in Explorer" Click="OnShowFolder" />
+                        <Button Content="Open another workspace…" Click="OnOpenWorkspace" />
+                        <Button x:Name="DefaultWorkspaceButton" Content="Use default workspace" Click="OnUseDefault" />
+                    </StackPanel>
+                    <MenuFlyoutSeparator />
+                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Backups are a single JSON file with every page, its hierarchy and content, and every task with its page links. Settings and AI history are not included." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Export backup…" Click="OnExportBackup" />
+                        <Button Content="Restore into a new workspace…" Click="OnRestoreNew" />
+                        <Button Content="Replace this workspace from backup…" Click="OnRestoreReplace" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Appearance -->
+            <TextBlock Text="Appearance" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <RadioButtons x:Name="ThemeChoice" Header="Theme" SelectionChanged="OnThemeChanged" MaxColumns="3">
+                    <x:String>Use system setting</x:String>
+                    <x:String>Light</x:String>
+                    <x:String>Dark</x:String>
+                </RadioButtons>
+            </Border>
+
+            <!-- Shortcuts -->
+            <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <TextBlock x:Name="ShortcutText" FontFamily="Cascadia Mono" FontSize="12" IsTextSelectionEnabled="True" />
+            </Border>
+
+            </StackPanel>
+            </Expander>
+
+            <!-- Privacy -->
+            <TextBlock Text="Privacy" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0" />
+            <Border Style="{StaticResource CardBorderStyle}">
+                <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                           Text="SlothBoss has no accounts and no telemetry. Your workspace is a SQLite file on this computer and the AI runs locally through Ollama (localhost only; other addresses are refused). The only other connections happen if you turn on Web research above: search queries go to SerpApi and result-page addresses to Browserbase. Text in your files, notes and web pages is treated as data, never as instructions, and changes that matter need your approval." />
+            </Border>
+            <TextBlock x:Name="VersionText" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="0,8,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

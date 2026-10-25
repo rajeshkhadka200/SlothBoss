@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="SlothBoss.App.Views.PageEditorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    NavigationCacheMode="Disabled">
+
+    <Page.Resources>
+        <!-- Borderless, background-free text inputs so the page reads like a document. -->
+        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+        <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+        <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+        <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+        <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+        <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header: breadcrumbs, save status, page actions -->
+        <Grid Grid.Row="0" Padding="20,10,16,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <BreadcrumbBar x:Name="Crumbs" VerticalAlignment="Center" ItemClicked="OnCrumbClicked" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock x:Name="SaveStatus" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="0,0,8,0"
+                           AutomationProperties.LiveSetting="Polite" />
+                <Button x:Name="AskButton" Style="{StaticResource ToolbarButtonStyle}" Click="OnAskAboutPage"
+                        ToolTipService.ToolTip="Ask the assistant about this page" AutomationProperties.Name="Ask the assistant">
+                    <FontIcon Glyph="&#xE99A;" FontSize="15" />
+                </Button>
+                <ToggleButton x:Name="FavoriteToggle" Style="{StaticResource DefaultToggleButtonStyle}" Padding="8,4" Height="32"
+                              Background="Transparent" BorderThickness="0" Click="OnFavoriteClick"
+                              ToolTipService.ToolTip="Favorite" AutomationProperties.Name="Favorite">
+                    <FontIcon x:Name="FavoriteIcon" Glyph="&#xE734;" FontSize="15" />
+                </ToggleButton>
+                <Button Style="{StaticResource ToolbarButtonStyle}" ToolTipService.ToolTip="More actions" AutomationProperties.Name="More page actions">
+                    <FontIcon Glyph="&#xE712;" FontSize="15" />
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuFlyoutItem Text="New subpage" Click="OnNewSubpage" KeyboardAcceleratorTextOverride="Ctrl+Shift+N">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="New task on this page" Click="OnNewTask">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9D5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Move to…" Click="OnMove">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DE;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Export as Markdown…" Click="OnExport">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEDE1;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Archive" Click="OnArchive">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B8;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Delete…" Click="OnDelete">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer x:Name="Scroller" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+            <StackPanel MaxWidth="{StaticResource ContentMaxWidth}" Padding="40,8,40,80" HorizontalAlignment="Stretch">
+                <TextBox x:Name="TitleBox" PlaceholderText="Untitled" FontSize="34" FontWeight="SemiBold" Padding="0,4"
+                         TextWrapping="Wrap" AcceptsReturn="False" TextChanged="OnTitleChanged" KeyDown="OnTitleKeyDown"
+                         AutomationProperties.Name="Page title" />
+
+                <!-- Formatting toolbar -->
+                <StackPanel x:Name="Toolbar" Orientation="Horizontal" Spacing="2" Margin="-6,8,0,8">
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="p" Click="OnBlockClick" ToolTipService.ToolTip="Text (Ctrl+0)" AutomationProperties.Name="Normal text">
+                        <TextBlock Text="Aa" FontSize="13" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="h1" Click="OnBlockClick" ToolTipService.ToolTip="Heading 1 (Ctrl+1)" AutomationProperties.Name="Heading 1">
+                        <TextBlock Text="H1" FontWeight="SemiBold" FontSize="13" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="h2" Click="OnBlockClick" ToolTipService.ToolTip="Heading 2 (Ctrl+2)" AutomationProperties.Name="Heading 2">
+                        <TextBlock Text="H2" FontWeight="SemiBold" FontSize="13" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="h3" Click="OnBlockClick" ToolTipService.ToolTip="Heading 3 (Ctrl+3)" AutomationProperties.Name="Heading 3">
+                        <TextBlock Text="H3" FontWeight="SemiBold" FontSize="13" />
+                    </Button>
+                    <AppBarSeparator />
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnBoldClick" ToolTipService.ToolTip="Bold (Ctrl+B)" AutomationProperties.Name="Bold">
+                        <FontIcon Glyph="&#xE8DD;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnItalicClick" ToolTipService.ToolTip="Italic (Ctrl+I)" AutomationProperties.Name="Italic">
+                        <FontIcon Glyph="&#xE8DB;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnInlineCodeClick" ToolTipService.ToolTip="Inline code (Ctrl+E)" AutomationProperties.Name="Inline code">
+                        <TextBlock Text="&lt;/&gt;" FontFamily="Cascadia Mono" FontSize="12" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnLinkClick" ToolTipService.ToolTip="Link (Ctrl+K)" AutomationProperties.Name="Insert link">
+                        <FontIcon Glyph="&#xE71B;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnPageLinkClick" ToolTipService.ToolTip="Link to a page (Ctrl+Shift+K)" AutomationProperties.Name="Link to a page">
+                        <FontIcon Glyph="&#xE8A5;" FontSize="14" />
+                    </Button>
+                    <AppBarSeparator />
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="ul" Click="OnBlockClick" ToolTipService.ToolTip="Bulleted list (Ctrl+Shift+8)" AutomationProperties.Name="Bulleted list">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="ol" Click="OnBlockClick" ToolTipService.ToolTip="Numbered list (Ctrl+Shift+7)" AutomationProperties.Name="Numbered list">
+                        <FontIcon Glyph="&#xF0E6;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="todo" Click="OnBlockClick" ToolTipService.ToolTip="Checklist (Ctrl+Shift+9; Ctrl+Enter toggles)" AutomationProperties.Name="Checklist">
+                        <FontIcon Glyph="&#xE73A;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="quote" Click="OnBlockClick" ToolTipService.ToolTip="Quote (Ctrl+Shift+Q)" AutomationProperties.Name="Quote">
+                        <FontIcon Glyph="&#xE9B2;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Tag="code" Click="OnBlockClick" ToolTipService.ToolTip="Code block (Ctrl+Shift+C)" AutomationProperties.Name="Code block">
+                        <FontIcon Glyph="&#xE943;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <InfoBar x:Name="LinkBar" IsOpen="False" IsClosable="True" Severity="Informational" Margin="0,0,0,8">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="OpenLinkButton" Content="Open" Click="OnOpenLink" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <RichEditBox x:Name="Editor" MinHeight="360" Padding="0,4" FontSize="15" TextWrapping="Wrap"
+                             IsSpellCheckEnabled="True" DisabledFormattingAccelerators="Underline"
+                             PlaceholderText="Start writing… Type # for a heading, - for a list, [] for a checklist."
+                             TextChanged="OnEditorTextChanged" SelectionChanged="OnEditorSelectionChanged"
+                             Paste="OnEditorPaste" PreviewKeyDown="OnEditorPreviewKeyDown"
+                             AutomationProperties.Name="Page content" />
+
+                <InfoBar x:Name="EditorInfo" IsOpen="False" Margin="0,8,0,0" />
+
+                <!-- Page context: subpages, tasks, links -->
+                <StackPanel x:Name="MetaPanel" Margin="0,24,0,0" Spacing="4" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
