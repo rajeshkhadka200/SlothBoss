@@ -33,3 +33,7 @@ Thumbs.db
 # Local tool settings
 .claude/
 
+
+# Raw screen recordings (never publish unedited footage)
+/DemoVideoClip.mp4
+
